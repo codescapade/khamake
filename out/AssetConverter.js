@@ -65,23 +65,21 @@ class AssetConverter {
             this.watcher = chokidar.watch(match, { ignored: /[\/\\]\.(svn|git|DS_Store)/, persistent: watch, followSymlinks: false });
             const onFileChange = async (file) => {
                 const fileinfo = path.parse(file);
-                const baseDir = path.dirname(match);
-                let outPath = fileinfo.dir + path.sep + fileinfo.name;
-                outPath = path.relative(baseDir, outPath);
-                log.info('Reexporting ' + outPath + fileinfo.ext);
+                let exportInfo = AssetConverter.createExportInfo(fileinfo, false, options, this.exporter.options.from);
+                log.info('Reexporting ' + exportInfo.destination + fileinfo.ext);
                 switch (fileinfo.ext) {
                     case '.png':
                     case '.jpg':
                     case '.jpeg':
                     case '.hdr':
                         { }
-                        await this.exporter.copyImage(this.platform, file, outPath, {}, {});
+                        await this.exporter.copyImage(this.platform, file, exportInfo.destination, {}, {});
                         break;
                     case '.ogg':
                     case '.mp3':
                     case '.flac':
                     case '.wav': {
-                        await this.exporter.copySound(this.platform, file, outPath, {});
+                        await this.exporter.copySound(this.platform, file, exportInfo.destination, {});
                         break;
                     }
                     case '.mp4':
@@ -89,17 +87,18 @@ class AssetConverter {
                     case '.mov':
                     case '.wmv':
                     case '.avi': {
-                        await this.exporter.copyVideo(this.platform, file, outPath, {});
+                        await this.exporter.copyVideo(this.platform, file, exportInfo.destination, {});
                         break;
                     }
                     case '.ttf':
-                        await this.exporter.copyFont(this.platform, file, outPath, {});
+                        await this.exporter.copyFont(this.platform, file, exportInfo.destination, {});
                         break;
                     default:
-                        await this.exporter.copyBlob(this.platform, file, outPath + fileinfo.ext, {});
+                        exportInfo = AssetConverter.createExportInfo(fileinfo, true, options, this.exporter.options.from);
+                        await this.exporter.copyBlob(this.platform, file, exportInfo.destination + fileinfo.ext, {});
                 }
                 for (let callback of ProjectFile_1.Callbacks.postAssetReexporting) {
-                    callback(outPath + fileinfo.ext);
+                    callback(exportInfo.destination + fileinfo.ext);
                 }
             };
             this.watcher.on('add', (file) => {
