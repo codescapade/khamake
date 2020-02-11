@@ -207,6 +207,7 @@ class Project {
                     log.info('Warning: No haxelib.json and no Sources directory found in library ' + library + '.');
                 }
                 this.sources.push(path.join(dir, 'Sources'));
+                this.assetMatchers.push({ match: path.join(dir, 'Assets'), options: {} });
             }
             if (fs.existsSync(path.join(dir, 'extraParams.hxml'))) {
                 let params = fs.readFileSync(path.join(dir, 'extraParams.hxml'), 'utf8');
